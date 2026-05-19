@@ -14,30 +14,30 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/82 backdrop-blur-md p-4"
         onClick={onClose}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.3 }}
-          className="relative w-full max-w-3xl max-h-[90vh] bg-card border border-border/80 rounded-xl overflow-y-auto shadow-2xl"
+          transition={{ duration: 0.36, ease: [0.2, 0.9, 0.2, 1] }}
+          className="glass-card relative w-full max-w-3xl max-h-[90vh] rounded-2xl overflow-y-auto shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Sticky header */}
-          <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-card/95 backdrop-blur border-b border-border/50">
+          <div className="sticky top-0 z-10 flex items-center justify-between p-5 bg-card/85 backdrop-blur-xl border-b border-white/10">
             <div className="flex items-center gap-3">
-              <span className="inline-block px-2.5 py-1 text-[11px] font-mono uppercase tracking-widest rounded-md bg-primary/20 text-primary border border-primary/10">
+              <span className="inline-block px-2.5 py-1 text-[11px] font-mono uppercase tracking-widest rounded-full border border-white/20 bg-white/10 text-foreground">
                 {project.category}
               </span>
-              <h2 className="text-lg font-heading font-bold gradient-text">
+              <h2 className="text-lg font-heading font-black text-foreground">
                 {project.title}
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-muted transition-colors flex-shrink-0"
+              className="p-2 rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
@@ -50,13 +50,13 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
               <video
                 src={project.videoUrl}
                 controls
-                className="w-full rounded-xl mb-6"
+                className="w-full rounded-md mb-6"
               />
             ) : (
               <img
                 src={project.imageUrl}
                 alt={project.title}
-                className="w-full rounded-xl mb-6 object-contain bg-black/20"
+                className="w-full rounded-md mb-6 object-contain bg-background border border-white/10"
                 style={{ objectPosition: project.imagePosition }}
               />
             )}
@@ -70,7 +70,7 @@ export default function ProjectModal({ project, onClose }: ProjectModalProps) {
                 {project.description}
               </p>
               {project.content && (
-                <div className="mt-6 p-5 rounded-xl bg-white/[0.02] border border-border/50 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                <div className="mt-6 p-5 rounded-md bg-background border border-white/10 text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {project.content}
                 </div>
               )}

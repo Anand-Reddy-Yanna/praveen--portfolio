@@ -50,7 +50,7 @@ export default function Navbar() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-lg shadow-black/20"
+            ? "bg-card/[0.82] backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20"
             : "bg-transparent"
         }`}
       >
@@ -58,10 +58,10 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/">
             <button
-              className="text-xl font-heading font-bold gradient-text hover:opacity-80 transition-opacity"
+              className="text-xl font-heading font-black tracking-tight text-foreground hover:text-primary transition-colors"
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             >
-              Praveen<span className="text-primary">.</span>
+              Praveen<span className="text-secondary">.</span>
             </button>
           </Link>
 
@@ -71,13 +71,13 @@ export default function Navbar() {
               <button
                 key={link.href}
                 onClick={() => scrollTo(link.href)}
-                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-white/5"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-white/10"
               >
                 {link.label}
               </button>
             ))}
             <Link href="/login">
-              <button className="ml-2 px-3 py-2 text-sm text-muted-foreground/50 hover:text-muted-foreground transition-colors rounded-md hover:bg-white/5">
+              <button className="ml-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-white/10">
                 <Shield className="w-4 h-4" />
               </button>
             </Link>
@@ -108,7 +108,7 @@ export default function Navbar() {
                 <button
                   key={link.href}
                   onClick={() => scrollTo(link.href)}
-                  className="w-full text-center py-3 text-lg text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-white/5"
+                  className="w-full text-center py-3 text-lg font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-white/10"
                 >
                   {link.label}
                 </button>

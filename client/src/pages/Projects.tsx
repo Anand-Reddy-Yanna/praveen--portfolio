@@ -8,6 +8,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import ProjectCard from "@/components/ProjectCard";
 import ProjectModal from "@/components/ProjectModal";
+import CursorGlow from "@/components/CursorGlow";
 
 export default function Projects() {
   const [filter, setFilter] = useState<string>("all");
@@ -32,9 +33,10 @@ export default function Projects() {
   return (
     <div className="min-h-screen bg-background">
       <div className="animated-bg" />
+      <CursorGlow />
 
       {/* Header */}
-      <div className="sticky top-0 z-40 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-40 border-b border-white/10 bg-card/[0.82] backdrop-blur-xl">
         <div className="section-container py-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
             <Link href="/">
@@ -42,17 +44,17 @@ export default function Projects() {
                 <ArrowLeft className="w-4 h-4" /> Back
               </Button>
             </Link>
-            <h1 className="text-xl font-heading font-bold gradient-text">All Projects</h1>
+            <h1 className="text-xl font-heading font-black text-foreground">All Projects</h1>
           </div>
           <div className="flex gap-2 flex-wrap">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 capitalize ${
+                className={`px-4 py-2 rounded-md text-sm font-bold transition-all duration-300 capitalize border ${
                   filter === cat
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 border border-border/50"
+                    ? "bg-primary text-primary-foreground border-white/25 shadow-[0_14px_40px_hsl(var(--primary)/0.24)]"
+                    : "bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 border-white/10"
                 }`}
               >
                 {cat}
@@ -72,10 +74,10 @@ export default function Projects() {
             <motion.div
               key={project.id}
               layout
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3, delay: i * 0.05 }}
+              initial={{ opacity: 0, y: 34, scale: 0.96, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: 18, scale: 0.96 }}
+              transition={{ duration: 0.52, delay: i * 0.04, ease: [0.2, 0.9, 0.2, 1] }}
             >
               <ProjectCard project={project} onClick={() => setSelectedProject(project)} />
             </motion.div>
