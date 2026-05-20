@@ -6,16 +6,25 @@ import type { User } from "../shared/schema.js";
 import type { Express } from "express";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { isSecureCookieRequest } from "./config.js";
 
 export function setupAuth(app: Express) {
   const MemoryStore = createMemoryStore(session);
   const secret = process.env.SESSION_SECRET || require("crypto").randomBytes(32).toString("hex");
+  const secureCookies = isSecureCookieRequest();
+
+  app.set("trust proxy", 1);
   app.use(
     session({
       secret,
       resave: false,
       saveUninitialized: false,
-      cookie: { secure: false, maxAge: 86400000 },
+      cookie: {
+        secure: secureCookies,
+        sameSite: secureCookies ? "none" : "lax",
+        httpOnly: true,
+        maxAge: 86400000,
+      },
       store: new MemoryStore({ checkPeriod: 86400000 }),
     })
   );

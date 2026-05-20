@@ -4,8 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server/index.ts",
-    "build": "vite build && npx esbuild server/index.ts --bundle --platform=node --outfile=dist/index.js --format=esm --packages=external",
-    "start": "NODE_ENV=production node dist/index.js"
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "vite build",
+    "build:server": "npx esbuild server/index.ts --bundle --platform=node --outfile=dist/index.js --format=esm --packages=external",
+    "start": "NODE_ENV=production node dist/index.js",
+    "start:server": "NODE_ENV=production node dist/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

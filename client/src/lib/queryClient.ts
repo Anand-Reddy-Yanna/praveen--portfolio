@@ -1,5 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -10,7 +12,8 @@ export const queryClient = new QueryClient({
 });
 
 export async function apiRequest(url: string, options?: RequestInit) {
-  const res = await fetch(url, {
+  const targetUrl = `${API_BASE_URL}${url}`;
+  const res = await fetch(targetUrl, {
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     ...options,

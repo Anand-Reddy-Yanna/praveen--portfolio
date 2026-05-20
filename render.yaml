@@ -1,13 +1,19 @@
 services:
   - type: web
-    name: praveen-portfolio
+    name: praveen-portfolio-api
     runtime: node
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    buildCommand: npm install && npm run build:server
+    startCommand: npm run start:server
     envVars:
       - key: NODE_ENV
         value: production
+      - key: SERVE_FRONTEND
+        value: false
       - key: MONGODB_URI
         sync: false
       - key: SESSION_SECRET
         generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

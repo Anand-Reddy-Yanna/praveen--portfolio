@@ -5,10 +5,12 @@ import { connectDB } from "./db.js";
 import { storage } from "./storage.js";
 import { setupAuth } from "./auth.js";
 import { registerRoutes } from "./routes.js";
+import { buildCorsMiddleware } from "./config.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const shouldServeFrontend = process.env.SERVE_FRONTEND === "true";
 
 async function main() {
   // Connect to MongoDB and seed data
@@ -16,6 +18,7 @@ async function main() {
   await storage.seed();
 
   const app = express();
+  app.use(buildCorsMiddleware());
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ extended: true }));
 
@@ -31,11 +34,15 @@ async function main() {
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
+  } else if (shouldServeFrontend) {
     const distPath = path.resolve(__dirname, "../dist/public");
     app.use(express.static(distPath));
     app.get("*", (_req, res) => {
       res.sendFile(path.resolve(distPath, "index.html"));
+    });
+  } else {
+    app.get("/", (_req, res) => {
+      res.json({ ok: true, service: "portfolio-api" });
     });
   }
 
