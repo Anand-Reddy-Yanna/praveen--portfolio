@@ -511,23 +511,51 @@ function Footer({ hero }: { hero: HeroSettings }) {
 export default function Home() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const { data: hero } = useQuery<HeroSettings>({
+  const { data: hero, isError: heroError, isLoading: heroLoading, refetch: refetchHero } = useQuery<HeroSettings>({
     queryKey: ["hero"],
     queryFn: () => apiRequest("/api/hero"),
+    retry: 2,
   });
-  const { data: skills } = useQuery<Skill[]>({
+  const { data: skills, isError: skillsError, isLoading: skillsLoading, refetch: refetchSkills } = useQuery<Skill[]>({
     queryKey: ["skills"],
     queryFn: () => apiRequest("/api/skills"),
+    retry: 2,
   });
-  const { data: projects } = useQuery<Project[]>({
+  const { data: projects, isError: projectsError, isLoading: projectsLoading, refetch: refetchProjects } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: () => apiRequest("/api/projects"),
+    retry: 2,
   });
 
-  if (!hero || !skills || !projects) {
+  const isLoading = heroLoading || skillsLoading || projectsLoading;
+  const hasError = heroError || skillsError || projectsError;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (hasError || !hero || !skills || !projects) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-4 text-center">
+        <div className="glass-card p-10 max-w-md w-full">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-heading font-black text-foreground mb-2">
+            Unable to connect to server
+          </h2>
+          <p className="text-muted-foreground text-sm mb-6">
+            The backend API is not reachable. This usually means the server is starting up (Render free tier can take ~30s) or the API URL is not configured correctly.
+          </p>
+          <button
+            onClick={() => { refetchHero(); refetchSkills(); refetchProjects(); }}
+            className="px-6 py-2.5 rounded-md bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
