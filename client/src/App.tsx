@@ -10,7 +10,7 @@ import SkillsManager from "./pages/admin/SkillsManager";
 import ProjectsManager from "./pages/admin/ProjectsManager";
 import Messages from "./pages/admin/Messages";
 import Settings from "./pages/admin/Settings";
-import AIBot from "./pages/admin/AIBot";
+
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -66,9 +66,7 @@ export default function App() {
               <Route path="/settings">
                 <PageWrapper><Settings /></PageWrapper>
               </Route>
-              <Route path="/ai">
-                <PageWrapper><AIBot /></PageWrapper>
-              </Route>
+
             </AdminLayout>
           </Route>
         </Switch>

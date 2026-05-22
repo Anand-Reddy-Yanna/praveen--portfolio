@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
-import { LayoutDashboard, Type, Wrench, FolderOpen, MessageSquare, LogOut, Loader2, Sparkles, Settings } from "lucide-react";
+import { LayoutDashboard, Type, Wrench, FolderOpen, MessageSquare, LogOut, Loader2, Settings } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -10,7 +10,6 @@ const navItems = [
   { href: "/skills", label: "Skills", icon: Wrench },
   { href: "/projects", label: "Projects", icon: FolderOpen },
   { href: "/messages", label: "Messages", icon: MessageSquare },
-  { href: "/ai", label: "AI Assistant", icon: Sparkles },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

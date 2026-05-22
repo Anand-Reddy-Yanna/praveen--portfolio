@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import SkillCard from "@/components/SkillCard";
-import ProjectCard from "@/components/ProjectCard";
+import Skills3DScene from "@/components/SkillCard";
+import ProjectCarousel from "@/components/ProjectCarousel";
 import ProjectModal from "@/components/ProjectModal";
 import Navbar from "@/components/Navbar";
 import CursorGlow from "@/components/CursorGlow";
@@ -37,7 +37,7 @@ function HeroSection({ hero }: { hero: HeroSettings }) {
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 18% 18%, hsl(var(--primary) / 0.2), transparent 28rem), radial-gradient(circle at 82% 12%, hsl(var(--accent) / 0.16), transparent 30rem), linear-gradient(135deg, hsl(225 32% 8%) 0%, hsl(230 30% 5%) 58%, hsl(260 32% 9%) 100%)",
+            "radial-gradient(circle at 18% 18%, hsl(var(--primary) / 0.15), transparent 28rem), radial-gradient(circle at 82% 12%, hsl(var(--secondary) / 0.08), transparent 30rem), linear-gradient(135deg, hsl(0 0% 4%) 0%, hsl(0 0% 3%) 58%, hsl(0 3% 5%) 100%)",
         }}
       />
       {/* Subtle grid pattern */}
@@ -244,21 +244,8 @@ function AboutSection({ hero }: { hero: HeroSettings }) {
   );
 }
 
-/* ─── Skills Grid ─── */
+/* ─── Skills 3D Scene ─── */
 function SkillsSection({ skills }: { skills: Skill[] }) {
-  const [activeCategory, setActiveCategory] = useState<string>("all");
-
-  const categories = [
-    { value: "all", label: "All Skills" },
-    { value: "design", label: "Design" },
-    { value: "photo", label: "Photography" },
-    { value: "3d", label: "3D Modeling" },
-  ];
-
-  const filtered = activeCategory === "all"
-    ? skills
-    : skills.filter((s) => s.category === activeCategory);
-
   return (
     <section id="skills" className="py-28">
       <div className="section-container">
@@ -267,49 +254,20 @@ function SkillsSection({ skills }: { skills: Skill[] }) {
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: 0.7, ease: [0.2, 0.9, 0.2, 1] }}
-          className="mb-12"
+          className="mb-12 text-center"
         >
-          <span className="studio-label">What I Do</span>
+          <span className="studio-label justify-center">What I Do</span>
           <h2 className="text-4xl sm:text-6xl font-heading font-black text-foreground mt-3 tracking-tight">
             Skills & Expertise
           </h2>
         </motion.div>
-
-        {/* Category Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.62, ease: [0.2, 0.9, 0.2, 1] }}
-          className="flex flex-wrap gap-2 mb-12"
-        >
-          {categories.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => setActiveCategory(cat.value)}
-              className={`px-5 py-2 rounded-md text-sm font-bold transition-all duration-300 border ${
-                activeCategory === cat.value
-                  ? "bg-primary text-primary-foreground border-white/25 shadow-[0_14px_40px_hsl(var(--primary)/0.24)]"
-                  : "bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 border-white/10"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </motion.div>
-
-        {/* Skills Grid */}
-        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((skill, i) => (
-            <SkillCard key={skill.id} skill={skill} index={i} />
-          ))}
-        </motion.div>
+        <Skills3DScene skills={skills} />
       </div>
     </section>
   );
 }
 
-/* ─── Projects Grid ─── */
+/* ─── Projects Carousel ─── */
 function ProjectsSection({
   projects,
   hero,
@@ -319,56 +277,36 @@ function ProjectsSection({
   hero: HeroSettings;
   onSelect: (p: Project) => void;
 }) {
-  const featured = projects.filter((p) => p.isFeatured);
   return (
-    <section id="projects" className="py-28 bg-card/[0.35]">
+    <section id="projects" className="py-28 bg-card/[0.35] overflow-hidden">
       <div className="section-container">
         <motion.div
           initial={{ opacity: 0, y: 44, filter: "blur(10px)" }}
           whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           viewport={{ once: true, amount: 0.35 }}
           transition={{ duration: 0.7, ease: [0.2, 0.9, 0.2, 1] }}
-          className="mb-4"
+          className="mb-4 text-center"
         >
-          <span className="studio-label">My Work</span>
+          <span className="studio-label justify-center">My Work</span>
           <h2 className="text-4xl sm:text-6xl font-heading font-black text-foreground mt-3 mb-4 tracking-tight">
-            Featured Projects
+            Projects
           </h2>
           {hero.projectsText && (
-            <p className="text-muted-foreground max-w-xl">
+            <p className="text-muted-foreground max-w-xl mx-auto">
               {hero.projectsText}
             </p>
           )}
         </motion.div>
-
-        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
-          {featured.map((project, i) => (
-            <motion.div
-              key={project.id}
-              layout
-              initial={{ opacity: 0, y: 40, filter: "blur(8px)" }}
-              whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: i * 0.08, duration: 0.55, ease: [0.2, 0.9, 0.2, 1] }}
-            >
-              <ProjectCard project={project} onClick={() => onSelect(project)} />
-            </motion.div>
-          ))}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center mt-14"
-        >
-          <Link href="/projects">
-            <Button size="lg" variant="outline" className="gap-2 px-8">
-              View All Projects <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
-        </motion.div>
       </div>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.7, delay: 0.15, ease: [0.2, 0.9, 0.2, 1] }}
+        className="mt-8"
+      >
+        <ProjectCarousel projects={projects} onSelect={onSelect} />
+      </motion.div>
     </section>
   );
 }

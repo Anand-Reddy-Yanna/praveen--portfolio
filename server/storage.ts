@@ -1,9 +1,9 @@
 import type {
-  User, HeroSettings, Skill, Project, Message,
-  InsertHero, InsertSkill, InsertProject, InsertMessage
+  User, HeroSettings, Skill, Project, Message, SocialLink,
+  InsertHero, InsertSkill, InsertProject, InsertMessage, InsertSocialLink
 } from "../shared/schema";
 import { hashPassword, verifyPassword } from "./hash.js";
-import { UserModel, HeroModel, SkillModel, ProjectModel, MessageModel } from "./models.js";
+import { UserModel, HeroModel, SkillModel, ProjectModel, MessageModel, SocialLinkModel } from "./models.js";
 
 export { verifyPassword };
 
@@ -163,6 +163,25 @@ export class MongoStorage {
   }
   async deleteMessage(id: string) {
     await MessageModel.findByIdAndDelete(id);
+    return true;
+  }
+
+  // ── Social Links ──
+  async getSocialLinks() {
+    const docs = await SocialLinkModel.find().sort({ sortOrder: 1 });
+    return docs.map((d) => toPlain<SocialLink>(d));
+  }
+  async createSocialLink(data: InsertSocialLink) {
+    const count = await SocialLinkModel.countDocuments();
+    const doc = await SocialLinkModel.create({ ...data, sortOrder: count });
+    return toPlain<SocialLink>(doc);
+  }
+  async updateSocialLink(id: string, data: Partial<InsertSocialLink>) {
+    const doc = await SocialLinkModel.findByIdAndUpdate(id, { $set: data }, { new: true });
+    return doc ? toPlain<SocialLink>(doc) : undefined;
+  }
+  async deleteSocialLink(id: string) {
+    await SocialLinkModel.findByIdAndDelete(id);
     return true;
   }
 

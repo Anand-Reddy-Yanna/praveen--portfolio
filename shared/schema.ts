@@ -48,6 +48,13 @@ export interface Message {
   isRead: boolean;
 }
 
+export interface SocialLink {
+  id: number;
+  platform: string;
+  url: string;
+  sortOrder: number;
+}
+
 export const insertMessageSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Please enter a valid email"),
@@ -82,7 +89,13 @@ export const insertProjectSchema = z.object({
   isFeatured: z.boolean().default(false),
 });
 
+export const insertSocialLinkSchema = z.object({
+  platform: z.string().min(1),
+  url: z.string().url(),
+});
+
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type InsertHero = z.infer<typeof insertHeroSchema>;
 export type InsertSkill = z.infer<typeof insertSkillSchema>;
 export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type InsertSocialLink = z.infer<typeof insertSocialLinkSchema>;

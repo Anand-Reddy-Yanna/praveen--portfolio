@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { storage } from "./storage.js";
 import { requireAuth } from "./auth.js";
 import { verifyPassword } from "./hash.js";
-import { insertSkillSchema, insertProjectSchema, insertMessageSchema, insertHeroSchema } from "../shared/schema.js";
+import { insertSkillSchema, insertProjectSchema, insertMessageSchema, insertHeroSchema, insertSocialLinkSchema } from "../shared/schema.js";
 import { z } from "zod";
 
 export function registerRoutes(app: Express) {
@@ -92,6 +92,29 @@ export function registerRoutes(app: Express) {
     res.json({ success: true });
   });
 
+  // Public - Social Links
+  app.get("/api/social-links", async (_req, res) => {
+    res.json(await storage.getSocialLinks());
+  });
+
+  // Admin - Social Links
+  app.post("/api/social-links", requireAuth, async (req, res) => {
+    const result = insertSocialLinkSchema.safeParse(req.body);
+    if (!result.success) return res.status(400).json({ errors: result.error.flatten() });
+    res.status(201).json(await storage.createSocialLink(result.data));
+  });
+  app.patch("/api/social-links/:id", requireAuth, async (req, res) => {
+    const result = insertSocialLinkSchema.partial().safeParse(req.body);
+    if (!result.success) return res.status(400).json({ errors: result.error.flatten() });
+    const link = await storage.updateSocialLink(req.params.id, result.data);
+    if (!link) return res.status(404).json({ message: "Not found" });
+    res.json(link);
+  });
+  app.delete("/api/social-links/:id", requireAuth, async (req, res) => {
+    await storage.deleteSocialLink(req.params.id);
+    res.json({ success: true });
+  });
+
   // Admin - Change Password
   app.post("/api/change-password", requireAuth, async (req, res) => {
     const schema = z.object({
@@ -110,42 +133,4 @@ export function registerRoutes(app: Express) {
     res.json({ success: true });
   });
 
-  // AI Content Generation (simulated)
-  app.post("/api/ai/generate", requireAuth, async (req, res) => {
-    const { prompt, type } = req.body;
-
-    // Simulated AI responses based on type
-    const responses: Record<string, (prompt: string) => string> = {
-      description: (p: string) => {
-        const templates = [
-          `A meticulously crafted ${p.toLowerCase()} that showcases exceptional attention to detail and creative vision. This project combines cutting-edge techniques with artistic sensibility to deliver a truly standout result that captivates audiences and elevates brand presence.`,
-          `This ${p.toLowerCase()} represents a bold exploration of visual storytelling, blending innovative design principles with a deep understanding of user experience. Every element was carefully considered to create a cohesive and impactful narrative.`,
-          `An immersive ${p.toLowerCase()} experience that pushes creative boundaries while maintaining functional excellence. The project demonstrates mastery of modern design tools and a keen eye for aesthetic harmony.`,
-        ];
-        return templates[Math.floor(Math.random() * templates.length)];
-      },
-      tagline: (p: string) => {
-        const taglines = [
-          `Transforming ideas into visual masterpieces — ${p}`,
-          `Where creativity meets precision — ${p}`,
-          `Elevating brands through exceptional ${p.toLowerCase()}`,
-          `Crafting unforgettable visual experiences in ${p.toLowerCase()}`,
-        ];
-        return taglines[Math.floor(Math.random() * taglines.length)];
-      },
-      about: (_p: string) => {
-        return `I'm a passionate creative professional with a deep commitment to visual excellence. With extensive experience across graphic design, photo editing, and 3D modeling, I bring a unique perspective that blends technical precision with artistic innovation. My work has been recognized for pushing creative boundaries while maintaining the highest standards of quality. I believe in the power of design to tell stories, evoke emotions, and drive meaningful connections between brands and their audiences.`;
-      },
-      content: (p: string) => {
-        return `Project Details:\n\nThis ${p.toLowerCase()} was developed through an iterative creative process that prioritized both aesthetic impact and functional clarity.\n\nKey Highlights:\n• Concept development and mood board creation\n• Multiple design iterations with stakeholder feedback\n• High-fidelity production with attention to every detail\n• Final delivery optimized for multiple platforms and formats\n\nThe project demonstrates a sophisticated understanding of visual hierarchy, color theory, and modern design trends while maintaining a timeless quality that ensures lasting impact.`;
-      },
-    };
-
-    const generator = responses[type] || responses.description;
-    const generated = generator(prompt || "creative project");
-
-    // Simulate a brief delay for realism
-    await new Promise((r) => setTimeout(r, 800));
-    res.json({ content: generated });
-  });
 }

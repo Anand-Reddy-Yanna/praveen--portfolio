@@ -52,3 +52,11 @@ const messageSchema = new Schema({
   isRead: { type: Boolean, default: false },
 });
 export const MessageModel = mongoose.model("Message", messageSchema);
+
+// ── Social Link ──
+const socialLinkSchema = new Schema({
+  platform: { type: String, required: true },
+  url: { type: String, required: true },
+  sortOrder: { type: Number, default: 0 },
+});
+export const SocialLinkModel = mongoose.model("SocialLink", socialLinkSchema);
