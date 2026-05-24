@@ -29,13 +29,19 @@ export interface Skill {
 export interface Project {
   id: number;
   title: string;
-  category: "design" | "photo" | "3d";
+  section: string;
   imageUrl: string;
   imagePosition: "top" | "center" | "bottom" | "left" | "right";
   videoUrl: string | null;
   description: string;
   content: string | null;
   isFeatured: boolean;
+  sortOrder: number;
+}
+
+export interface ProjectSection {
+  id: number;
+  name: string;
   sortOrder: number;
 }
 
@@ -80,13 +86,17 @@ export const insertSkillSchema = z.object({
 
 export const insertProjectSchema = z.object({
   title: z.string().min(1),
-  category: z.enum(["design", "photo", "3d"]),
+  section: z.string().min(1),
   imageUrl: z.string().min(1),
   imagePosition: z.enum(["top", "center", "bottom", "left", "right"]).default("center"),
   videoUrl: z.string().nullable().optional(),
   description: z.string().min(1),
   content: z.string().nullable().optional(),
   isFeatured: z.boolean().default(false),
+});
+
+export const insertProjectSectionSchema = z.object({
+  name: z.string().min(1, "Section name is required"),
 });
 
 export const insertSocialLinkSchema = z.object({
@@ -98,4 +108,5 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type InsertHero = z.infer<typeof insertHeroSchema>;
 export type InsertSkill = z.infer<typeof insertSkillSchema>;
 export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type InsertProjectSection = z.infer<typeof insertProjectSectionSchema>;
 export type InsertSocialLink = z.infer<typeof insertSocialLinkSchema>;

@@ -9,7 +9,7 @@ import {
   Palette, Camera, Box, Github, Linkedin, Twitter, Mail as MailIcon,
   Instagram, Youtube, Globe, Facebook, Settings,
 } from "lucide-react";
-import type { HeroSettings, Skill, Project, SocialLink as SocialLinkType } from "@shared/schema";
+import type { HeroSettings, Skill, Project, SocialLink as SocialLinkType, ProjectSection } from "@shared/schema";
 import { insertMessageSchema, type InsertMessage } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/components/ui/use-toast";
@@ -517,6 +517,11 @@ export default function Home() {
   const { data: projects, isError: projectsError, isLoading: projectsLoading, refetch: refetchProjects } = useQuery<Project[]>({
     queryKey: ["projects"],
     queryFn: () => apiRequest("/api/projects"),
+    retry: 2,
+  });
+  const { data: sections } = useQuery<ProjectSection[]>({
+    queryKey: ["project-sections"],
+    queryFn: () => apiRequest("/api/project-sections"),
     retry: 2,
   });
 

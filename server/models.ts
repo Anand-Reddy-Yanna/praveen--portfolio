@@ -32,7 +32,7 @@ export const SkillModel = mongoose.model("Skill", skillSchema);
 // ── Project ──
 const projectSchema = new Schema({
   title: { type: String, required: true },
-  category: { type: String, enum: ["design", "photo", "3d"], required: true },
+  section: { type: String, required: true },
   imageUrl: { type: String, required: true },
   imagePosition: { type: String, enum: ["top", "center", "bottom", "left", "right"], default: "center" },
   videoUrl: { type: String, default: null },
@@ -42,6 +42,13 @@ const projectSchema = new Schema({
   sortOrder: { type: Number, default: 0 },
 });
 export const ProjectModel = mongoose.model("Project", projectSchema);
+
+// ── Project Section ──
+const projectSectionSchema = new Schema({
+  name: { type: String, required: true, unique: true },
+  sortOrder: { type: Number, default: 0 },
+});
+export const ProjectSectionModel = mongoose.model("ProjectSection", projectSectionSchema);
 
 // ── Message ──
 const messageSchema = new Schema({

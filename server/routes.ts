@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { storage } from "./storage.js";
 import { requireAuth } from "./auth.js";
 import { verifyPassword } from "./hash.js";
-import { insertSkillSchema, insertProjectSchema, insertMessageSchema, insertHeroSchema, insertSocialLinkSchema } from "../shared/schema.js";
+import { insertSkillSchema, insertProjectSchema, insertMessageSchema, insertHeroSchema, insertSocialLinkSchema, insertProjectSectionSchema } from "../shared/schema.js";
 import { z } from "zod";
 
 export function registerRoutes(app: Express) {
@@ -15,6 +15,9 @@ export function registerRoutes(app: Express) {
   });
   app.get("/api/projects", async (_req, res) => {
     res.json(await storage.getProjects());
+  });
+  app.get("/api/project-sections", async (_req, res) => {
+    res.json(await storage.getProjectSections());
   });
   app.post("/api/messages", async (req, res) => {
     const result = insertMessageSchema.safeParse(req.body);
@@ -53,6 +56,29 @@ export function registerRoutes(app: Express) {
   });
   app.post("/api/skills/reorder", requireAuth, async (req, res) => {
     await storage.reorderSkills(req.body.ids);
+    res.json({ success: true });
+  });
+
+  // Admin - Project Sections
+  app.post("/api/project-sections", requireAuth, async (req, res) => {
+    const result = insertProjectSectionSchema.safeParse(req.body);
+    if (!result.success) return res.status(400).json({ errors: result.error.flatten() });
+    try {
+      res.status(201).json(await storage.createProjectSection(result.data));
+    } catch (err: any) {
+      if (err.code === 11000) return res.status(400).json({ message: "Section already exists" });
+      throw err;
+    }
+  });
+  app.patch("/api/project-sections/:id", requireAuth, async (req, res) => {
+    const result = insertProjectSectionSchema.partial().safeParse(req.body);
+    if (!result.success) return res.status(400).json({ errors: result.error.flatten() });
+    const section = await storage.updateProjectSection(req.params.id, result.data);
+    if (!section) return res.status(404).json({ message: "Not found" });
+    res.json(section);
+  });
+  app.delete("/api/project-sections/:id", requireAuth, async (req, res) => {
+    await storage.deleteProjectSection(req.params.id);
     res.json({ success: true });
   });
 

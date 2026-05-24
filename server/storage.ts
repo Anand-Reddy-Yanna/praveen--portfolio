@@ -1,9 +1,9 @@
 import type {
-  User, HeroSettings, Skill, Project, Message, SocialLink,
-  InsertHero, InsertSkill, InsertProject, InsertMessage, InsertSocialLink
+  User, HeroSettings, Skill, Project, Message, SocialLink, ProjectSection,
+  InsertHero, InsertSkill, InsertProject, InsertMessage, InsertSocialLink, InsertProjectSection
 } from "../shared/schema";
 import { hashPassword, verifyPassword } from "./hash.js";
-import { UserModel, HeroModel, SkillModel, ProjectModel, MessageModel, SocialLinkModel } from "./models.js";
+import { UserModel, HeroModel, SkillModel, ProjectModel, MessageModel, SocialLinkModel, ProjectSectionModel } from "./models.js";
 
 export { verifyPassword };
 
@@ -61,15 +61,52 @@ export class MongoStorage {
       console.log("  → Seeded skills");
     }
 
+    // Seed default project sections
+    const sectionCount = await ProjectSectionModel.countDocuments();
+    if (sectionCount === 0) {
+      await ProjectSectionModel.insertMany([
+        { name: "Graphic Design", sortOrder: 0 },
+        { name: "Photo Editing", sortOrder: 1 },
+        { name: "3D Modeling", sortOrder: 2 },
+      ]);
+      console.log("  → Seeded project sections");
+    }
+
+    // Migrate old projects: category → section
+    const CATEGORY_TO_SECTION: Record<string, string> = {
+      "design": "Graphic Design",
+      "photo": "Photo Editing",
+      "3d": "3D Modeling",
+    };
+    const oldProjects = await ProjectModel.find({ section: { $exists: false } });
+    if (oldProjects.length > 0) {
+      for (const p of oldProjects) {
+        const cat = (p as any).category || "design";
+        const sectionName = CATEGORY_TO_SECTION[cat] || "Graphic Design";
+        await ProjectModel.findByIdAndUpdate(p._id, { $set: { section: sectionName }, $unset: { category: 1 } });
+      }
+      console.log(`  → Migrated ${oldProjects.length} projects from category → section`);
+    }
+    // Also fix projects that have category but empty/missing section
+    const brokenProjects = await ProjectModel.find({ $or: [{ section: "" }, { section: null }] });
+    if (brokenProjects.length > 0) {
+      for (const p of brokenProjects) {
+        const cat = (p as any).category || "design";
+        const sectionName = CATEGORY_TO_SECTION[cat] || "Graphic Design";
+        await ProjectModel.findByIdAndUpdate(p._id, { $set: { section: sectionName } });
+      }
+      console.log(`  → Fixed ${brokenProjects.length} projects with missing section`);
+    }
+
     const projectCount = await ProjectModel.countDocuments();
     if (projectCount === 0) {
       const seeds = [
-        { title: "Brand Identity System", category: "design", imageUrl: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&q=80", imagePosition: "center", description: "Complete brand identity design including logo, color palette, typography, and brand guidelines for a modern tech startup.", isFeatured: true, sortOrder: 0 },
-        { title: "Product Photography Edit", category: "photo", imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80", imagePosition: "center", description: "High-end product photography editing with advanced retouching, color correction, and compositing for e-commerce.", isFeatured: true, sortOrder: 1 },
-        { title: "Architectural Visualization", category: "3d", imageUrl: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80", imagePosition: "center", description: "Photorealistic 3D architectural visualization of a modern luxury residence.", isFeatured: true, sortOrder: 2 },
-        { title: "Magazine Layout Design", category: "design", imageUrl: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=800&q=80", imagePosition: "center", description: "Editorial layout design for a high-fashion magazine featuring dynamic typography.", isFeatured: true, sortOrder: 3 },
-        { title: "Portrait Retouching Series", category: "photo", imageUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80", imagePosition: "top", description: "Professional portrait retouching maintaining natural skin texture.", isFeatured: true, sortOrder: 4 },
-        { title: "3D Character Design", category: "3d", imageUrl: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&q=80", imagePosition: "center", description: "Stylized 3D character design and modeling for an animated short film.", isFeatured: true, sortOrder: 5 },
+        { title: "Brand Identity System", section: "Graphic Design", imageUrl: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&q=80", imagePosition: "center", description: "Complete brand identity design including logo, color palette, typography, and brand guidelines for a modern tech startup.", isFeatured: true, sortOrder: 0 },
+        { title: "Product Photography Edit", section: "Photo Editing", imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80", imagePosition: "center", description: "High-end product photography editing with advanced retouching, color correction, and compositing for e-commerce.", isFeatured: true, sortOrder: 1 },
+        { title: "Architectural Visualization", section: "3D Modeling", imageUrl: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80", imagePosition: "center", description: "Photorealistic 3D architectural visualization of a modern luxury residence.", isFeatured: true, sortOrder: 2 },
+        { title: "Magazine Layout Design", section: "Graphic Design", imageUrl: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=800&q=80", imagePosition: "center", description: "Editorial layout design for a high-fashion magazine featuring dynamic typography.", isFeatured: true, sortOrder: 3 },
+        { title: "Portrait Retouching Series", section: "Photo Editing", imageUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80", imagePosition: "top", description: "Professional portrait retouching maintaining natural skin texture.", isFeatured: true, sortOrder: 4 },
+        { title: "3D Character Design", section: "3D Modeling", imageUrl: "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=800&q=80", imagePosition: "center", description: "Stylized 3D character design and modeling for an animated short film.", isFeatured: true, sortOrder: 5 },
       ];
       await ProjectModel.insertMany(seeds);
       console.log("  → Seeded projects");
@@ -120,6 +157,35 @@ export class MongoStorage {
   }
   async reorderSkills(ids: string[]) {
     await Promise.all(ids.map((id, i) => SkillModel.findByIdAndUpdate(id, { sortOrder: i })));
+  }
+
+  // ── Project Sections ──
+  async getProjectSections() {
+    const docs = await ProjectSectionModel.find().sort({ sortOrder: 1 });
+    return docs.map((d) => toPlain<ProjectSection>(d));
+  }
+  async createProjectSection(data: InsertProjectSection) {
+    const count = await ProjectSectionModel.countDocuments();
+    const doc = await ProjectSectionModel.create({ ...data, sortOrder: count });
+    return toPlain<ProjectSection>(doc);
+  }
+  async deleteProjectSection(id: string) {
+    const section = await ProjectSectionModel.findById(id);
+    if (section) {
+      // Also delete all projects in this section
+      await ProjectModel.deleteMany({ section: section.name });
+    }
+    await ProjectSectionModel.findByIdAndDelete(id);
+    return true;
+  }
+  async updateProjectSection(id: string, data: Partial<InsertProjectSection>) {
+    const old = await ProjectSectionModel.findById(id);
+    const doc = await ProjectSectionModel.findByIdAndUpdate(id, { $set: data }, { new: true });
+    // If name changed, update all projects referencing the old name
+    if (old && data.name && old.name !== data.name) {
+      await ProjectModel.updateMany({ section: old.name }, { $set: { section: data.name } });
+    }
+    return doc ? toPlain<ProjectSection>(doc) : undefined;
   }
 
   // ── Projects ──
