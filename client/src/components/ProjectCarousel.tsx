@@ -12,27 +12,60 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const velocityRef = useRef(0);
   const lastXRef = useRef(0);
   const rafRef = useRef<number>();
+  const autoScrollRef = useRef<number>();
+  const draggedRef = useRef(false);
 
-  // Mouse drag handlers
+  // Duplicate projects for seamless loop
+  const loopedProjects = projects.length > 0
+    ? [...projects, ...projects, ...projects]
+    : [];
+
+  // ── Auto-scroll at 0.8px/frame ──
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || projects.length === 0) return;
+
+    const tick = () => {
+      if (!isPaused && !isDragging) {
+        el.scrollLeft += 0.8;
+
+        // Seamless reset: when we've scrolled past the 2nd copy, jump back to 1st copy
+        const singleSetWidth = el.scrollWidth / 3;
+        if (el.scrollLeft >= singleSetWidth * 2) {
+          el.scrollLeft -= singleSetWidth;
+        }
+      }
+      autoScrollRef.current = requestAnimationFrame(tick);
+    };
+    autoScrollRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
+    };
+  }, [isPaused, isDragging, projects.length]);
+
+  // ── Mouse drag handlers ──
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     const el = scrollRef.current;
     if (!el) return;
     setIsDragging(true);
+    draggedRef.current = false;
     setStartX(e.pageX - el.offsetLeft);
     setScrollLeft(el.scrollLeft);
     lastXRef.current = e.pageX;
     velocityRef.current = 0;
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
   }, []);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    setMousePos({ x: e.clientX, y: e.clientY });
     if (!isDragging || !scrollRef.current) return;
     e.preventDefault();
+    draggedRef.current = true;
     const x = e.pageX - scrollRef.current.offsetLeft;
     const walk = (x - startX) * 1.5;
     scrollRef.current.scrollLeft = scrollLeft - walk;
@@ -42,7 +75,7 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-    // Momentum scroll
+    // Momentum/inertia
     const el = scrollRef.current;
     if (!el) return;
     let vel = velocityRef.current * 3;
@@ -50,12 +83,18 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
       if (Math.abs(vel) < 0.5) return;
       el.scrollLeft -= vel;
       vel *= 0.92;
+
+      // Seamless reset during momentum
+      const singleSetWidth = el.scrollWidth / 3;
+      if (el.scrollLeft >= singleSetWidth * 2) el.scrollLeft -= singleSetWidth;
+      if (el.scrollLeft <= 0) el.scrollLeft += singleSetWidth;
+
       rafRef.current = requestAnimationFrame(decelerate);
     };
     decelerate();
   }, []);
 
-  // Horizontal wheel scroll
+  // ── Horizontal wheel scroll ──
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -63,6 +102,10 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         e.preventDefault();
         el.scrollLeft += e.deltaY * 1.2;
+
+        const singleSetWidth = el.scrollWidth / 3;
+        if (el.scrollLeft >= singleSetWidth * 2) el.scrollLeft -= singleSetWidth;
+        if (el.scrollLeft <= 0) el.scrollLeft += singleSetWidth;
       }
     };
     el.addEventListener("wheel", handleWheel, { passive: false });
@@ -71,6 +114,16 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
+
+  // Start at position = 1 copy in, so we can scroll both directions
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || projects.length === 0) return;
+    requestAnimationFrame(() => {
+      const singleSetWidth = el.scrollWidth / 3;
+      el.scrollLeft = singleSetWidth;
+    });
+  }, [projects.length]);
 
   if (projects.length === 0) {
     return (
@@ -81,7 +134,11 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
   }
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => { setIsPaused(false); setHoveredIndex(null); }}
+    >
       {/* Edge gradient masks */}
       <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
            style={{ background: "linear-gradient(to right, hsl(var(--background)), transparent)" }} />
@@ -89,19 +146,15 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
            style={{ background: "linear-gradient(to left, hsl(var(--background)), transparent)" }} />
 
       {/* Scroll indicator */}
-      <div className="flex items-center justify-center gap-2 mb-6 text-xs text-muted-foreground/60">
+      <div className="flex items-center justify-center gap-3 mb-6 text-xs text-muted-foreground/50">
         <motion.div
-          animate={{ x: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          className="font-mono uppercase tracking-[0.25em] flex items-center gap-3"
+          animate={{ opacity: [0.4, 0.7, 0.4] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          ←
-        </motion.div>
-        <span className="font-mono uppercase tracking-[0.2em]">Drag or scroll</span>
-        <motion.div
-          animate={{ x: [0, -8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          →
+          <span>—</span>
+          <span>GRAB OR SCROLL</span>
+          <span>—</span>
         </motion.div>
       </div>
 
@@ -110,7 +163,7 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={() => { setIsDragging(false); setHoveredIndex(null); }}
+        onMouseLeave={() => { setIsDragging(false); }}
         className="flex gap-5 overflow-x-auto overflow-y-hidden px-8 sm:px-16 pb-6 scrollbar-hide"
         style={{
           cursor: isDragging ? "grabbing" : "grab",
@@ -120,20 +173,16 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
           perspective: "1200px",
         }}
       >
-        {projects.map((project, index) => {
+        {loopedProjects.map((project, index) => {
           const isHovered = hoveredIndex === index;
 
           return (
             <motion.div
-              key={project.id}
+              key={`${project.id}-${index}`}
               className="flex-shrink-0 relative group"
               style={{ width: "clamp(280px, 22vw, 380px)" }}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 0.6, delay: index * 0.06, ease: [0.2, 0.9, 0.2, 1] }}
             >
               <motion.div
                 className="relative overflow-hidden rounded-2xl border border-white/[0.08]
@@ -149,7 +198,9 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
                 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 style={{ transformStyle: "preserve-3d" }}
-                onClick={() => !isDragging && onSelect?.(project)}
+                onClick={() => {
+                  if (!draggedRef.current) onSelect?.(project);
+                }}
               >
                 {/* Image */}
                 <div className="aspect-[3/4] overflow-hidden">
@@ -202,9 +253,6 @@ export default function ProjectCarousel({ projects, onSelect }: ProjectCarouselP
             </motion.div>
           );
         })}
-
-        {/* Spacer at end */}
-        <div className="flex-shrink-0 w-8 sm:w-16" />
       </div>
     </div>
   );

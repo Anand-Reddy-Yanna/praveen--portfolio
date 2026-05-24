@@ -7,8 +7,9 @@ import { Link } from "wouter";
 import {
   ChevronDown, Send, Loader2, ArrowRight, Eye,
   Palette, Camera, Box, Github, Linkedin, Twitter, Mail as MailIcon,
+  Instagram, Youtube, Globe, Facebook, Settings,
 } from "lucide-react";
-import type { HeroSettings, Skill, Project } from "@shared/schema";
+import type { HeroSettings, Skill, Project, SocialLink as SocialLinkType } from "@shared/schema";
 import { insertMessageSchema, type InsertMessage } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/components/ui/use-toast";
@@ -24,7 +25,7 @@ import CursorGlow from "@/components/CursorGlow";
 
 /* ─── Hero ─── */
 function HeroSection({ hero }: { hero: HeroSettings }) {
-  const letters = hero.name.split("");
+  const words = hero.name.split(" ");
   const { scrollY } = useScroll();
   const posterY = useTransform(scrollY, [0, 800], [0, 64]);
   const posterRotate = useTransform(scrollY, [0, 800], [0, -3]);
@@ -75,24 +76,32 @@ function HeroSection({ hero }: { hero: HeroSettings }) {
 
         <motion.h1
           style={{ y: titleY }}
-          className="max-w-4xl text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-black mb-6 leading-[0.84] tracking-tight text-foreground"
+          className="max-w-4xl text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-heading font-black mb-6 leading-[0.84] tracking-tight text-foreground flex flex-wrap"
         >
-          {letters.map((letter, i) => (
-            <motion.span
-              key={i}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.8,
-                delay: i * 0.06,
-                ease: [0.25, 0.46, 0.45, 0.94],
-              }}
-              whileHover={{ y: -10, rotate: i % 2 === 0 ? -4 : 4, scale: 1.04 }}
-              className="kinetic-letter inline-block"
-            >
-              {letter === " " ? "\u00A0" : letter}
-            </motion.span>
-          ))}
+          {words.map((word, wi) => {
+            const prevChars = words.slice(0, wi).reduce((s, w) => s + w.length + 1, 0);
+            return (
+              <span key={wi} className="inline-flex">
+                {word.split("").map((letter, li) => (
+                  <motion.span
+                    key={`${wi}-${li}`}
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.8,
+                      delay: (prevChars + li) * 0.06,
+                      ease: [0.25, 0.46, 0.45, 0.94],
+                    }}
+                    whileHover={{ y: -10, rotate: (prevChars + li) % 2 === 0 ? -4 : 4, scale: 1.04 }}
+                    className="kinetic-letter inline-block"
+                  >
+                    {letter}
+                  </motion.span>
+                ))}
+                {wi < words.length - 1 && <span className="inline-block">&nbsp;</span>}
+              </span>
+            );
+          })}
         </motion.h1>
 
         <motion.p
@@ -387,7 +396,24 @@ function ContactSection() {
 }
 
 /* ─── Footer ─── */
+const SOCIAL_ICON_MAP: Record<string, any> = {
+  github: Github,
+  instagram: Instagram,
+  twitter: Twitter,
+  linkedin: Linkedin,
+  youtube: Youtube,
+  facebook: Facebook,
+  dribbble: Globe,
+  behance: Globe,
+  website: Globe,
+};
+
 function Footer({ hero }: { hero: HeroSettings }) {
+  const { data: socialLinks } = useQuery<SocialLinkType[]>({
+    queryKey: ["social-links"],
+    queryFn: () => apiRequest("/api/social-links"),
+  });
+
   return (
     <footer className="border-t border-white/10 bg-card/60 text-foreground backdrop-blur-xl">
       <div className="section-container py-16">
@@ -421,19 +447,35 @@ function Footer({ hero }: { hero: HeroSettings }) {
             </nav>
           </div>
 
-          {/* Contact */}
+          {/* Contact + Social Links */}
           <div>
             <h4 className="font-heading font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">Get In Touch</h4>
             <a href={`mailto:${hero.contactEmail}`} className="text-sm text-muted-foreground hover:text-accent transition-colors flex items-center gap-2 mb-4">
               <MailIcon className="w-4 h-4" /> {hero.contactEmail}
             </a>
-            <div className="flex gap-3">
-              {[Github, Linkedin, Twitter].map((Icon, i) => (
-                <button key={i} className="p-2 rounded-md bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all">
-                  <Icon className="w-4 h-4" />
-                </button>
-              ))}
-            </div>
+            {socialLinks && socialLinks.length > 0 ? (
+              <div className="flex gap-3 flex-wrap">
+                {socialLinks.map((link) => {
+                  const Icon = SOCIAL_ICON_MAP[link.platform.toLowerCase()] || Globe;
+                  return (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-md bg-white/5 text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all"
+                      title={link.platform}
+                    >
+                      <Icon className="w-4 h-4" />
+                    </a>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground/50 flex items-center gap-1.5">
+                <Settings className="w-3 h-3" /> Add links in Admin → Settings
+              </p>
+            )}
           </div>
         </div>
 
