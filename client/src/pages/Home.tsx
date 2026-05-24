@@ -316,6 +316,19 @@ function ProjectsSection({
       >
         <ProjectCarousel projects={projects} onSelect={onSelect} />
       </motion.div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="text-center mt-10"
+      >
+        <Link href="/projects">
+          <Button size="lg" variant="outline" className="gap-2 px-8">
+            View All Projects <ArrowRight className="w-4 h-4" />
+          </Button>
+        </Link>
+      </motion.div>
     </section>
   );
 }
